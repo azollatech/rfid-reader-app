@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="Settings">
+        <EditTextPreference
+            android:key="@string/pref_ckpt_name"
+            android:title="Edit Checkpoint Name"
+            android:summary="\n(Click to edit checkpoint name)"
+            android:dialogTitle="Checkpoint Name"
+            android:dialogMessage="Enter the checkpoint name"
+            android:inputType="text"
+            android:singleLine="true"
+            />
+        <ListPreference
+            android:title="Set Server"
+            android:key="pref_server"
+            android:summary="\n(Click to edit)"
+            android:defaultValue="(empty)"
+            android:entries="@array/listArray"
+            android:entryValues="@array/listValues" />
+        <EditTextPreference
+            android:key="pref_port"
+            android:title="Set Port"
+            android:summary="\n(Click to edit port)"
+            android:dialogTitle="Port"
+            android:dialogMessage="Enter the port number"
+            android:inputType="number"
+            android:singleLine="true"
+            />
+        <CheckBoxPreference
+            android:key="pref_15_mins"
+            android:title="Time Limitation"
+            android:summary="Ignore chips repeated within 15 minutes"/>
+
+        <CheckBoxPreference
+            android:key="pref_10_chips"
+            android:title="Alternation Limitation"
+            android:summary="Ignore chips repeated from the last 10 chips"/>
+
+        <CheckBoxPreference
+            android:key="pref_showFullChipCode"
+            android:title="Full Chip Code"
+            android:summary="Show the full chip code"/>
+
+    </PreferenceCategory>
+    <Preference
+        android:key="version"
+        android:title="Version"
+        android:summary="@string/versionName"/>
+</PreferenceScreen>
