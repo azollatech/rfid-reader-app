@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
     private boolean bOpened = false;
     private MHandler handler = null;
     private Handler handler1 = null;
+    private Handler wifiTransferHandler = null;
 
     public static String DEVICE_ADDRESS = "device_address";
     private static String mConnectedDeviceName = null;
@@ -115,6 +116,10 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
     public static String title = "Disconnected";
     private Menu menu;
     public static String toggleTitle;
+
+    // Data Transfer via WiFi
+    ClientThread clientThread;
+    Thread thread;
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -540,6 +545,19 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
             } else if (server.equals("Live Trail")) {
                 String port = prefs.getString("pref_port", "");
                 new postToServerLiveTrail(this).execute("http://livetrail.net:" + port + "/rts?c=bvTvMJqxcQn5D2Fk", sEpc, time, android_id, ckpt_name, position);
+            } else if (server.equals("WiFi")){
+                wifiTransferHandler = new Handler(){
+                    @Override
+                    public void handleMessage(Message msg) {
+                        String position = (String) msg.obj;
+                        processFinish(position);
+                    }
+                };
+
+                String str = "*" + sEpc + "," + time + "," + android_id + "," + ckpt_name;
+                clientThread = new ClientThread(30000, "192.168.0.72", str, position, wifiTransferHandler);
+                thread = new Thread(clientThread);
+                thread.start();
             } else {
                 toast("Please set the destination server.");
             }
