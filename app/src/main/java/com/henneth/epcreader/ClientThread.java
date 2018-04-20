@@ -43,29 +43,31 @@ class ClientThread implements Runnable {
 
             this.sendMessage(msg);
 
-            while (!Thread.currentThread().isInterrupted()) {
-
-                Log.i(TAG, "Waiting for message from server...");
-
-                this.input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                String message = input.readLine();
-                Log.i(TAG, "Message received from the server : " + message);
-
-                if (null == message || "Disconnect".contentEquals(message)) {
-                    Thread.interrupted();
-                    message = "Server Disconnected.";
-                    Log.i(TAG, message);
-                    break;
-                }
-
-                if (message.equals("received")) {
-                    Message msg = Message.obtain(); // Creates an new Message instance
-                    msg.obj = position; // Put the string into Message, into "obj" field.
-                    msg.setTarget(handler); // Set the Handler
-                    msg.sendToTarget();
-                }
-
-            }
+//            while (!Thread.currentThread().isInterrupted()) {
+//
+//                Log.i(TAG, "Waiting for message from server...");
+//
+//                this.input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//                String message = input.readLine();
+//                Log.i(TAG, "Message received from the server : " + message);
+//
+//                if (null == message || "Disconnect".contentEquals(message)) {
+//                    Thread.interrupted();
+//                    message = "Server Disconnected.";
+//                    Log.i(TAG, message);
+//                    break;
+//                }
+//
+//                if (message.equals("received")) {
+//                    Message msg = Message.obtain(); // Creates an new Message instance
+//                    msg.obj = position; // Put the string into Message, into "obj" field.
+//                    msg.setTarget(handler); // Set the Handler
+//                    msg.sendToTarget();
+//                    Log.i(TAG, message);
+//
+//                }
+//
+//            }
 
         } catch (UnknownHostException e1) {
             e1.printStackTrace();

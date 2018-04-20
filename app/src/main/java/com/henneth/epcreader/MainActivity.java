@@ -36,13 +36,21 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -120,6 +128,12 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
     // Data Transfer via WiFi
     ClientThread clientThread;
     Thread thread;
+
+    Thread thread2;                //執行緒
+    Socket clientSocket;        //客戶端的socket
+    private BufferedWriter bw;            //取得網路輸出串流
+    private BufferedReader br;            //取得網路輸入串流
+    private String tmp;                    //做為接收時的緩存
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -277,7 +291,64 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
             Log.d("msgStr", "Fail to get previous incompleteTagRecord data.");
         }
         registerConnectivityBroadcastReceiver();
+
+        // WiFi transfer Socket Input Stream Reader
+        thread2=new Thread(Connection);                //賦予執行緒工作
+        thread2.start();
+
+//        while (!Thread.currentThread().isInterrupted()) {
+//
+//                Log.i(TAG, "Waiting for message from server...");
+//
+//                this.input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//                String message = input.readLine();
+//                Log.i(TAG, "Message received from the server : " + message);
+//
+//                if (null == message || "Disconnect".contentEquals(message)) {
+//                    Thread.interrupted();
+//                    message = "Server Disconnected.";
+//                    Log.i(TAG, message);
+//                    break;
+//                }
+//
+//                if (message.equals("received")) {
+//                    Message msg = Message.obtain(); // Creates an new Message instance
+//                    msg.obj = position; // Put the string into Message, into "obj" field.
+//                    msg.setTarget(handler); // Set the Handler
+//                    msg.sendToTarget();
+//                    Log.i(TAG, message);
+//
+//                }
+//
+//            }
     }
+
+    private Runnable Connection=new Runnable(){
+        @Override
+        public void run() {
+            String TAG = "InputStream";
+
+            try {
+                InetAddress serverAddr = InetAddress.getByName("127.0.0.1");
+                Socket socket = new Socket(serverAddr, 40000);
+
+                while (!Thread.currentThread().isInterrupted()) {
+
+                    Log.i(TAG, "Waiting for message from server...");
+
+                    BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    String message = input.readLine();
+                    Log.i(TAG, "Message received from the server : " + message);
+                }
+            } catch (UnknownHostException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+
+            Log.i(TAG, "interrupted");
+        }
+    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -497,6 +568,11 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
 //        if(shadowAdapter.getPosition(sEpc) < 0 || shadowAdapter.getCount() - latestPosition > 10){
 //        if(shadowAdapter.getPosition(sEpc) < 0){
         try{
+
+            Log.d("afwe", sEpc);
+            if (!sEpc.equals("523583283283283283288329")){
+                return;
+            }
             // save Epc for future checking
             shadowAdapter.add(sEpc);
             // make a backup copy of shadowAdapter
@@ -555,7 +631,7 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
                 };
 
                 String str = "*" + sEpc + "," + time + "," + android_id + "," + ckpt_name;
-                clientThread = new ClientThread(30000, "192.168.0.72", str, position, wifiTransferHandler);
+                clientThread = new ClientThread(40000, "192.168.0.72", str, position, wifiTransferHandler);
                 thread = new Thread(clientThread);
                 thread.start();
             } else {
