@@ -144,15 +144,31 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
                 }
                 return;
             }
+            case 2: {
+
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay!
+                    initApp();
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Toast.makeText(MainActivity.this, "App cannot function without permission to save file.", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
 
             // other 'case' lines to check for other
             // permissions this app might request
         }
     }
-    private void requestForRecordAudioPermission() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+    private void requestForPermissions() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
     }
-    private boolean checkIfAlreadyhavePermission() {
+    private boolean checkAudioPermission() {
         int result = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
         if (result == PackageManager.PERMISSION_GRANTED) {
             return true;
@@ -161,6 +177,19 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
         }
     }
 
+    private void requestForWriteFilePermission() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+    }
+    private boolean checkFileWritePermisson() {
+        int temp = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if(temp == PackageManager.PERMISSION_GRANTED) {
+            return true; // Write File to External Storage Permission is  granted
+        } else {
+            return false; // Permission is not granted
+        }
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -168,8 +197,12 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
 
         int MyVersion = Build.VERSION.SDK_INT;
         if (MyVersion > Build.VERSION_CODES.LOLLIPOP_MR1) {
-            if (!checkIfAlreadyhavePermission()) {
-                requestForRecordAudioPermission();
+            if (!checkAudioPermission()) {
+                requestForPermissions();
+                return;
+            }
+            if (!checkFileWritePermisson()) {
+                requestForWriteFilePermission();
                 return;
             }
         }
