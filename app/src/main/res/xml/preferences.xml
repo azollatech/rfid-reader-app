@@ -4,6 +4,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
+        android:key="settings"
         android:title="Settings">
         <EditTextPreference
             android:key="@string/pref_ckpt_name"
@@ -23,11 +24,20 @@
             android:entryValues="@array/listValues" />
         <EditTextPreference
             android:key="pref_port"
-            android:title="Set Port"
+            android:title="Set Port (for Live Trail)"
             android:summary="\n(Click to edit port)"
             android:dialogTitle="Port"
             android:dialogMessage="Enter the port number"
             android:inputType="number"
+            android:singleLine="true"
+            />
+        <EditTextPreference
+            android:key="pref_ip"
+            android:title="Set IP Address (for WiFi data transfer)"
+            android:summary="\n(Click to edit IP address)"
+            android:dialogTitle="IP address"
+            android:dialogMessage="Enter the IP address"
+            android:inputType="text"
             android:singleLine="true"
             />
         <CheckBoxPreference

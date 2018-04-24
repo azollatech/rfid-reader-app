@@ -60,7 +60,7 @@ import rfid.ivrjacku1.IvrJackAdapter;
 import rfid.ivrjacku1.IvrJackService;
 import rfid.ivrjacku1.IvrJackStatus;
 
-public class MainActivity extends AppCompatActivity implements IvrJackAdapter, postToServerRTS.AsyncResponse, postToServerLiveTrail.AsyncResponse {
+public class MainActivity extends AppCompatActivity implements IvrJackAdapter, postToServerRTS.AsyncResponse, postToServerLiveTrail.AsyncResponse, AsyncSocketConnection.AsyncResponse {
 
     private boolean bFirstLoad = true;
     private ImageView imgPlugout = null;
@@ -79,7 +79,6 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
     private boolean bOpened = false;
     private MHandler handler = null;
     private Handler handler1 = null;
-    private Handler wifiTransferHandler = null;
 
     public static String DEVICE_ADDRESS = "device_address";
     private static String mConnectedDeviceName = null;
@@ -124,16 +123,6 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
     public static String title = "Disconnected";
     private Menu menu;
     public static String toggleTitle;
-
-    // Data Transfer via WiFi
-    ClientThread clientThread;
-    Thread thread;
-
-    Thread thread2;                //執行緒
-    Socket clientSocket;        //客戶端的socket
-    private BufferedWriter bw;            //取得網路輸出串流
-    private BufferedReader br;            //取得網路輸入串流
-    private String tmp;                    //做為接收時的緩存
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -291,64 +280,7 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
             Log.d("msgStr", "Fail to get previous incompleteTagRecord data.");
         }
         registerConnectivityBroadcastReceiver();
-
-        // WiFi transfer Socket Input Stream Reader
-        thread2=new Thread(Connection);                //賦予執行緒工作
-        thread2.start();
-
-//        while (!Thread.currentThread().isInterrupted()) {
-//
-//                Log.i(TAG, "Waiting for message from server...");
-//
-//                this.input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//                String message = input.readLine();
-//                Log.i(TAG, "Message received from the server : " + message);
-//
-//                if (null == message || "Disconnect".contentEquals(message)) {
-//                    Thread.interrupted();
-//                    message = "Server Disconnected.";
-//                    Log.i(TAG, message);
-//                    break;
-//                }
-//
-//                if (message.equals("received")) {
-//                    Message msg = Message.obtain(); // Creates an new Message instance
-//                    msg.obj = position; // Put the string into Message, into "obj" field.
-//                    msg.setTarget(handler); // Set the Handler
-//                    msg.sendToTarget();
-//                    Log.i(TAG, message);
-//
-//                }
-//
-//            }
     }
-
-    private Runnable Connection=new Runnable(){
-        @Override
-        public void run() {
-            String TAG = "InputStream";
-
-            try {
-                InetAddress serverAddr = InetAddress.getByName("127.0.0.1");
-                Socket socket = new Socket(serverAddr, 40000);
-
-                while (!Thread.currentThread().isInterrupted()) {
-
-                    Log.i(TAG, "Waiting for message from server...");
-
-                    BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    String message = input.readLine();
-                    Log.i(TAG, "Message received from the server : " + message);
-                }
-            } catch (UnknownHostException e1) {
-                e1.printStackTrace();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-
-            Log.i(TAG, "interrupted");
-        }
-    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -568,11 +500,6 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
 //        if(shadowAdapter.getPosition(sEpc) < 0 || shadowAdapter.getCount() - latestPosition > 10){
 //        if(shadowAdapter.getPosition(sEpc) < 0){
         try{
-
-            Log.d("afwe", sEpc);
-            if (!sEpc.equals("523583283283283283288329")){
-                return;
-            }
             // save Epc for future checking
             shadowAdapter.add(sEpc);
             // make a backup copy of shadowAdapter
@@ -622,18 +549,9 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
                 String port = prefs.getString("pref_port", "");
                 new postToServerLiveTrail(this).execute("http://livetrail.net:" + port + "/rts?c=bvTvMJqxcQn5D2Fk", sEpc, time, android_id, ckpt_name, position);
             } else if (server.equals("WiFi")){
-                wifiTransferHandler = new Handler(){
-                    @Override
-                    public void handleMessage(Message msg) {
-                        String position = (String) msg.obj;
-                        processFinish(position);
-                    }
-                };
-
-                String str = "*" + sEpc + "," + time + "," + android_id + "," + ckpt_name;
-                clientThread = new ClientThread(40000, "192.168.0.72", str, position, wifiTransferHandler);
-                thread = new Thread(clientThread);
-                thread.start();
+                String ip = prefs.getString("pref_ip", "");
+                String str = "*" + sEpc + "," + time + "," + android_id + "," + ckpt_name + "," + position + "#";
+                new AsyncSocketConnection(ip, 44444, 10000, this).execute(str);
             } else {
                 toast("Please set the destination server.");
             }
@@ -741,7 +659,7 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
     /**
      * Toast
      */
-    private void toast(String message){
+    public void toast(String message){
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
@@ -770,6 +688,10 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
             } else if (server.equals("Live Trail")) {
                 String port = prefs.getString("pref_port", "");
                 new postToServerLiveTrail(this).execute("http://livetrail.net:" + port + "/rts?c=bvTvMJqxcQn5D2Fk", t.sEpc, t.time, t.android_id, ckpt_name, t.position);
+            } else if (server.equals("WiFi")){
+                String ip = prefs.getString("pref_ip", "");
+                String str = "*" + t.sEpc + "," + t.time + "," + t.android_id + "," + ckpt_name + "," + t.position + "#";
+                new AsyncSocketConnection(ip, 44444, 10000, this).execute(str);
             } else {
                 toast("Please set the destination server.");
             }
@@ -811,11 +733,13 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
             } else if (server.equals("Live Trail")) {
                 String port = prefs.getString("pref_port", "");
                 new postToServerLiveTrail(this).execute("http://livetrail.net:" + port + "/rts?c=bvTvMJqxcQn5D2Fk", t.sEpc, t.time, t.android_id, ckpt_name, t.position);
+            } else if (server.equals("WiFi")){
+                String ip = prefs.getString("pref_ip", "");
+                String str = "*" + t.sEpc + "," + t.time + "," + t.android_id + "," + ckpt_name + "," + t.position + "#";
+                new AsyncSocketConnection(ip, 44444, 4000, this).execute(str);
             } else {
                 toast("Please set the destination server.");
             }
-//            new postToServer(this).execute("http://m.racetimingsolutions.com/rfid-gun", t.sEpc, t.time, t.android_id, t.deviceName, t.position);
-//            new postToServer(this).execute("http://livetime.sportstiming.dk/LiveTimeService.asmx", t.sEpc, t.time, ckpt_name, t.deviceName, t.position);
         }
     }
 
@@ -904,7 +828,8 @@ public class MainActivity extends AppCompatActivity implements IvrJackAdapter, p
     public void onResume() {
         Log.d("onResume","onResume");
         super.onResume();
-        tagAdapter.notifyDataSetChanged();
+        if (tagAdapter != null)
+            tagAdapter.notifyDataSetChanged();
     }
     @Override
     public void onStop() {
