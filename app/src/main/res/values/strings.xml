@@ -47,7 +47,7 @@
     <string name="pref_10_chips">pref_10_chips</string>
 
     <!-- Strings related to Settings -->
-    <string name="versionName">1.0.8</string>
+    <string name="versionName">1.0.9</string>
 
     <!-- Example General settings -->
     <string name="pref_header_general">General</string>
