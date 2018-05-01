@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/EPCReader.iml" filepath="$PROJECT_DIR$/EPCReader.iml" />
       <module fileurl="file://$PROJECT_DIR$/RfidReaderApp.iml" filepath="$PROJECT_DIR$/RfidReaderApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
