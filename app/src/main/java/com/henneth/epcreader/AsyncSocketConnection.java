@@ -65,7 +65,11 @@ public class AsyncSocketConnection extends android.os.AsyncTask<String, String, 
     protected void onPostExecute(List<String> list) {
         if (list.get(0).equals("1")) {
             Log.d(TAG, "Finished communication with the socket. Result = " + list.get(1));
-            delegate.processFinish(list.get(1));
+            if (!list.get(1).equals("-1")){
+                delegate.processFinish(list.get(1));
+            } else {
+                delegate.toast("No matching timer.");
+            }
         } else {
             Log.d(TAG, "Error: " + list.get(1));
             delegate.toast(list.get(1));
